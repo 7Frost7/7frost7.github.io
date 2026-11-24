@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>SiteFrame — Fullscreen Website Embed</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: rgba(18, 25, 45, .92);
+      --line: rgba(255,255,255,.12);
+      --muted: #98a5bd;
+      --text: #f4f7ff;
+      --accent: #7c9cff;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background: radial-gradient(ellipse at 50% 0%, #1b2a51 0%, var(--bg) 58%);
+      color: var(--text);
+      font: 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    .start-screen {
+      min-height: 100%; display: grid; place-items: center; padding: 24px;
+    }
+    .panel {
+      width: min(620px, 100%); padding: 34px; border: 1px solid var(--line);
+      border-radius: 22px; background: var(--panel); box-shadow: 0 24px 80px #0008;
+      backdrop-filter: blur(18px);
+    }
+    .mark {
+      display: grid; place-items: center; width: 48px; height: 48px;
+      border-radius: 15px; background: linear-gradient(135deg, #7c9cff, #9c7cff);
+      color: #081126; font-size: 25px; font-weight: 800; margin-bottom: 22px;
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(27px, 5vw, 38px); letter-spacing: -.04em; }
+    .sub { margin: 0 0 25px; color: var(--muted); }
+    .url-form { display: flex; gap: 9px; }
+    .url-input {
+      min-width: 0; flex: 1; padding: 14px 15px; color: var(--text);
+      background: #080d1b; border: 1px solid var(--line); border-radius: 11px; outline: none;
+    }
+    .url-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #7c9cff24; }
+    .go {
+      padding: 0 20px; border: 0; border-radius: 11px; background: var(--accent);
+      color: #081126; font-weight: 750; cursor: pointer;
+    }
+    .go:hover { filter: brightness(1.1); }
+    .hint { margin: 16px 0 0; color: var(--muted); font-size: 12px; }
+    .error { min-height: 20px; margin-top: 10px; color: #ff9d9d; font-size: 13px; }
+
+    .viewer { position: fixed; inset: 0; display: none; background: #fff; }
+    .viewer.active { display: block; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+    .toolbar {
+      position: absolute; z-index: 5; top: 12px; left: 50%; transform: translateX(-50%);
+      width: min(850px, calc(100% - 24px)); display: flex; align-items: center; gap: 8px;
+      padding: 8px; border: 1px solid #ffffff22; border-radius: 14px;
+      background: rgba(12, 17, 31, .88); box-shadow: 0 8px 30px #0004;
+      backdrop-filter: blur(16px); transition: opacity .2s, transform .2s;
+    }
+    .toolbar input {
+      min-width: 0; flex: 1; padding: 9px 11px; border: 1px solid #ffffff1a;
+      border-radius: 9px; outline: none; color: white; background: #ffffff0c;
+    }
+    .toolbar input:focus { border-color: var(--accent); }
+    .tool-btn {
+      flex: 0 0 auto; padding: 9px 11px; border: 1px solid #ffffff1a;
+      border-radius: 9px; background: #ffffff10; color: white; cursor: pointer;
+    }
+    .tool-btn:hover { background: #ffffff20; }
+    .toolbar.hidden { opacity: 0; pointer-events: none; transform: translate(-50%, -14px); }
+    .show-controls {
+      position: absolute; z-index: 6; top: 12px; right: 12px; display: none;
+      border: 1px solid #ffffff25; border-radius: 10px; padding: 9px 12px;
+      background: rgba(12,17,31,.88); color: white; cursor: pointer;
+    }
+    .show-controls.visible { display: block; }
+    .notice {
+      position: absolute; z-index: 4; bottom: 14px; left: 50%; transform: translateX(-50%);
+      max-width: calc(100% - 28px); padding: 8px 12px; border: 1px solid #0002;
+      border-radius: 10px; background: #10182ddd; color: #e4eaff; font-size: 12px;
+      text-align: center; pointer-events: none; opacity: 0; transition: opacity .25s;
+    }
+    .notice.visible { opacity: 1; }
+    @media (max-width: 560px) {
+      .panel { padding: 25px 20px; }
+      .url-form { flex-direction: column; }
+      .go { min-height: 45px; }
+      .toolbar { flex-wrap: wrap; }
+      .toolbar input { flex-basis: 100%; }
+      .tool-btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="start-screen" id="startScreen">
+    <section class="panel" aria-labelledby="heading">
+      <div class="mark" aria-hidden="true">↗</div>
+      <h1 id="heading">Open a website</h1>
+      <p class="sub">Enter a URL to display it across the full window.</p>
+      <form class="url-form" id="startForm">
+        <input class="url-input" id="startUrl" type="text" inputmode="url"
+          placeholder="https://example.com" autocomplete="url" spellcheck="false" required>
+        <button class="go" type="submit">Embed site</button>
+      </form>
+      <div class="error" id="startError" role="alert"></div>
+      <p class="hint">Note: Some websites prohibit being displayed inside other sites. Those sites may show an error or a blank page here.</p>
+    </section>
+  </main>
+
+  <section class="viewer" id="viewer" aria-label="Embedded website">
+    <iframe id="siteFrame" title="Embedded website"
+      allow="fullscreen; autoplay; clipboard-read; clipboard-write; encrypted-media; picture-in-picture"
+      allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <form class="toolbar" id="toolbarForm" aria-label="Website controls">
+      <input id="toolbarUrl" type="text" aria-label="Website URL" spellcheck="false">
+      <button class="tool-btn" type="submit">Go</button>
+      <button class="tool-btn" type="button" id="newTabBtn">New tab ↗</button>
+      <button class="tool-btn" type="button" id="fullscreenBtn">Fullscreen</button>
+      <button class="tool-btn" type="button" id="hideBtn" aria-label="Hide controls">Hide</button>
+      <button class="tool-btn" type="button" id="exitBtn">Exit</button>
+    </form>
+    <button class="show-controls" id="showBtn" type="button">Show controls</button>
+    <div class="notice" id="notice" role="status"></div>
+  </section>
+
+  <script>
+    const startScreen = document.getElementById('startScreen');
+    const startForm = document.getElementById('startForm');
+    const startUrl = document.getElementById('startUrl');
+    const startError = document.getElementById('startError');
+    const viewer = document.getElementById('viewer');
+    const frame = document.getElementById('siteFrame');
+    const toolbar = document.querySelector('.toolbar');
+    const toolbarForm = document.getElementById('toolbarForm');
+    const toolbarUrl = document.getElementById('toolbarUrl');
+    const showBtn = document.getElementById('showBtn');
+    const notice = document.getElementById('notice');
+    let currentUrl = '';
+    let noticeTimer;
+
+    function normalizeUrl(value) {
+      let raw = value.trim();
+      if (!raw) throw new Error('Enter a website URL.');
+      if (!/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(raw)) raw = 'https://' + raw;
+      let parsed;
+      try { parsed = new URL(raw); } catch { throw new Error('That URL does not look valid.'); }
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('Only http:// and https:// website URLs are supported.');
+      }
+      return parsed.href;
+    }
+
+    function showNotice(message) {
+      notice.textContent = message;
+      notice.classList.add('visible');
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => notice.classList.remove('visible'), 4200);
+    }
+
+    function openSite(value) {
+      let url;
+      try { url = normalizeUrl(value); }
+      catch (error) {
+        if (viewer.classList.contains('active')) showNotice(error.message);
+        else startError.textContent = error.message;
+        return;
+      }
+      currentUrl = url;
+      startError.textContent = '';
+      toolbarUrl.value = url;
+      startScreen.style.display = 'none';
+      viewer.classList.add('active');
+      frame.src = url;
+    }
+
+    startForm.addEventListener('submit', event => {
+      event.preventDefault();
+      openSite(startUrl.value);
+    });
+
+    toolbarForm.addEventListener('submit', event => {
+      event.preventDefault();
+      openSite(toolbarUrl.value);
+    });
+
+    document.getElementById('newTabBtn').addEventListener('click', () => {
+      if (currentUrl) window.open(currentUrl, '_blank', 'noopener,noreferrer');
+    });
+
+    document.getElementById('fullscreenBtn').addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) await viewer.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch {
+        showNotice('Fullscreen is unavailable in this browser.');
+      }
+    });
+
+    document.getElementById('hideBtn').addEventListener('click', () => {
+      toolbar.classList.add('hidden');
+      showBtn.classList.add('visible');
+    });
+    showBtn.addEventListener('click', () => {
+      toolbar.classList.remove('hidden');
+      showBtn.classList.remove('visible');
+    });
+
+    document.getElementById('exitBtn').addEventListener('click', async () => {
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch { /* ignore */ }
+      }
+      frame.src = 'about:blank';
+      viewer.classList.remove('active');
+      startScreen.style.display = 'grid';
+      startUrl.value = currentUrl;
+      startUrl.focus();
+    });
+
+    frame.addEventListener('load', () => {
+      // A load event does not guarantee the remote site permits framing.
+      showNotice('Site loaded. If it appears blank or blocked, that site may not allow embedding.');
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && viewer.classList.contains('active') && toolbar.classList.contains('hidden')) {
+        toolbar.classList.remove('hidden');
+        showBtn.classList.remove('visible');
+      }
+    });
+  </script>
+</body>
+</html>
