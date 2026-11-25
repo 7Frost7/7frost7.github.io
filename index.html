@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IBW SMP</title>
+
+  <style>
+    @font-face {
+      font-family: minecraft;
+      src: url("Minecraft.ttf") format("truetype");
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      overflow: hidden;
+      background: url("https://raw.githubusercontent.com/dragon731012/Eaglercraft-1.12-Server-Hosting/refs/heads/Falixnodes-ONLY-V1-(EaglerXServer)/web/dirt.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: minecraft, Arial, sans-serif;
+      color: white;
+      font-size: 8vh;
+      font-weight: 100;
+      margin: 0 0 3vh 0;
+      text-shadow: 3px 3px #000;
+    }
+
+    /* Text loaded from alert.md */
+    #alertText {
+      font-family: minecraft, Arial, sans-serif;
+      color: white;
+      font-size: 24px;
+      line-height: 1.5;
+      max-width: 85%;
+      margin: 0 0 18px 0;
+      text-shadow: 2px 2px #000;
+      white-space: pre-wrap;
+    }
+
+    /* Google Docs-style button */
+    .google {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 11px 18px;
+      margin-bottom: 25px;
+
+      background: #ffffff;
+      color: #1a73e8;
+
+      text-decoration: none;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      font-weight: 500;
+
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+
+      transition:
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .google:hover {
+      background: #f8faff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Google Docs icon */
+    .google-icon {
+      width: 20px;
+      height: 24px;
+      position: relative;
+      display: inline-block;
+      background: #4285f4;
+      border-radius: 2px;
+      box-sizing: border-box;
+    }
+
+    .google-icon::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 7px;
+      height: 7px;
+      background: #a8c7fa;
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+
+    .google-icon::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      top: 10px;
+      height: 2px;
+      background: white;
+      box-shadow:
+        0 4px white,
+        0 8px white;
+    }
+
+    /*
+      Minecraft-style Continue button
+      Inspired by the classic Minecraft menu:
+      gray gradient + beveled pixel-style borders
+    */
+    .continue {
+      width: 300px;
+      height: 50px;
+
+      padding: 0;
+
+      font-family: minecraft, Arial, sans-serif;
+      font-size: 20px;
+      color: white;
+
+      cursor: pointer;
+
+      background: linear-gradient(
+        to bottom,
+        #727272 0%,
+        #5b5b5b 45%,
+        #4a4a4a 50%,
+        #3f3f3f 100%
+      );
+
+      /*
+        Minecraft-style beveled border
+      */
+      border-top: 3px solid #8b8b8b;
+      border-left: 3px solid #8b8b8b;
+      border-right: 3px solid #202020;
+      border-bottom: 3px solid #202020;
+
+      border-radius: 0;
+
+      /*
+        Pixel-like text shadow
+      */
+      text-shadow:
+        2px 2px 0 #222,
+        1px 1px 0 #222;
+
+      box-sizing: border-box;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      transition:
+        filter 0.08s ease,
+        background 0.08s ease;
+    }
+
+    /*
+      Minecraft-style hover highlight
+    */
+    .continue:hover {
+      background: linear-gradient(
+        to bottom,
+        #858585 0%,
+        #6d6d6d 45%,
+        #5b5b5b 50%,
+        #505050 100%
+      );
+
+      filter: brightness(1.15);
+    }
+
+    /*
+      Slightly darker while being clicked
+    */
+    .continue:active {
+      background: linear-gradient(
+        to bottom,
+        #4a4a4a 0%,
+        #3f3f3f 50%,
+        #333333 100%
+      );
+
+      border-top: 3px solid #202020;
+      border-left: 3px solid #202020;
+      border-right: 3px solid #8b8b8b;
+      border-bottom: 3px solid #8b8b8b;
+
+      transform: translateY(1px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>IBW SMP</h1>
+
+  <p id="alertText">Loading...</p>
+
+  <a
+    class="google"
+    href="https://docs.google.com/document/d/1t54DGbo2r-fcKp5vmh1ih3SAbyEUh9DVBmBj3dKMjZM/edit?usp=sharing"
+    target="_blank"
+    rel="noopener"
+  >
+    <span class="google-icon"></span>
+    Google Doc
+  </a>
+
+  <button class="continue" onclick="launchServer()">
+    Continue
+  </button>
+
+  <script>
+    const ALERT_URL =
+      "https://raw.githubusercontent.com/7Frost7/ibwmcURL/refs/heads/main/alert.md";
+
+    async function loadAlert() {
+      const alertText = document.getElementById("alertText");
+
+      try {
+        const response = await fetch(ALERT_URL, {
+          cache: "no-cache"
+        });
+
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+
+        const text = await response.text();
+
+        alertText.textContent = text.trim();
+      } catch (error) {
+        console.error("Failed to load alert.md:", error);
+
+        alertText.textContent = "Join:";
+      }
+    }
+
+    loadAlert();
+
+    function launchServer() {
+      localStorage.setItem("game", "true");
+
+      var httpUrl = "http://" + window.location.host + "/game.html";
+
+      window.location.href = httpUrl;
+
+      setTimeout(function() {
+        if (
+          window.location.protocol !== "http:" ||
+          window.location.href !== httpUrl
+        ) {
+          console.log("HTTPS → HTTP did not work. Trying again...");
+          window.location.href = httpUrl;
+
+          setTimeout(function() {
+            if (window.location.protocol !== "http:") {
+              alert("The browser did not switch to HTTP.");
+            }
+          }, 1000);
+        }
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
